@@ -1,330 +1,45 @@
-\# DevRel Letter Generator - Claude Instructions
+# CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Commands
 
-\## 🎯 Goal
+All commands run from `app/`:
 
+```bash
+cd app
+npm install        # install dependencies
+npm run dev        # dev server at localhost:5173
+npm run build      # production build
+npm run lint       # ESLint
+npm run preview    # preview production build
+```
 
+## Architecture
 
-Build a web service that generates:
+React 19 + Vite 8 app that generates Samsung DS DevRel newsletters. Two output formats from two **immutable** template files at the project root:
 
+- **template_markdown.md** — web HTML with CSS. Uses HTML comment markers (`<!-- news -->` … `<!-- //end news -->`) to delimit dynamic sections that get rebuilt from form data.
+- **template_email.md** — email-safe table HTML. Treated as a **static** template: only `{{PLACEHOLDER}}` tokens are replaced. Never reconstruct or remove any HTML in this template.
 
+Templates are loaded via Vite `?raw` imports (three levels up from `src/lib/`). Vite config has `server.fs.allow` set to the parent directory to permit this.
 
-1\. Markdown file based on `template\_markdown.md`
+### Key modules (`app/src/lib/`)
 
-2\. Email HTML (as markdown file) based on `template\_email.md`
+| Module | Purpose |
+|---|---|
+| `templateEngine.js` | `processMarkdown()` rebuilds sections + replaces placeholders (image URLs). `processEmail()` does **only** placeholder replacement (image base64). |
+| `placeholders.js` | `buildPlaceholderMap(state, 'url'|'base64')` → flat map. `replacePlaceholders(template, map)` → regex substitution. Handles literal `\` in email template placeholder names (e.g. `{{NEWS1\_THUMBNAIL\_IMAGE}}`). |
+| `markdownGenerator.js` | Builds HTML section strings for the markdown template. |
+| `emailGenerator.js` | Legacy; not currently imported by templateEngine. |
 
+### State management
 
+`useReducer` in `App.jsx` with reducer/initial state in `store.js`. Actions: `SET_FIELD`, `SET_ITEM_FIELD`, `ADD_ITEM`, `REMOVE_ITEM`, `RESET`.
 
-\---
+### Critical constraints
 
-
-
-\## 🚫 Critical Constraints (MUST FOLLOW)
-
-
-
-\* NEVER modify:
-
-
-
-&#x20; \* template\_markdown.md
-
-&#x20; \* template\_email.md
-
-\* Always create NEW files based on templates
-
-\* Use placeholder replacement only (e.g., {{DATE}}, {{NEWS1\_TITLE}})
-
-\* Do NOT change placeholder naming conventions
-
-
-
-\---
-
-
-
-\## 🧱 Architecture Guidelines
-
-
-
-\* Use simple frontend (React or Vanilla JS)
-
-\* Single large form UI
-
-\* No backend required (client-side only is acceptable)
-
-\* File generation should use Blob download
-
-
-
-\---
-
-
-
-\## 🧩 Core Features
-
-
-
-\### 1. Form Structure
-
-
-
-\* One large form with sections:
-
-
-
-&#x20; \* DATE
-
-&#x20; \* VOLUME
-
-&#x20; \* NEWS (1\~2)
-
-&#x20; \* Editor’s Pick (3\~5)
-
-&#x20; \* AI4SE (1\~2)
-
-&#x20; \* DevRel in DS (1\~5)
-
-&#x20; \* DevRel in Korea (1\~5)
-
-
-
-\---
-
-
-
-\### 2. Buttons
-
-
-
-\* Preview
-
-\* Save as MD
-
-\* Save as EMAIL Template
-
-
-
-\---
-
-
-
-\## ⚙️ Data Rules
-
-
-
-\### DATE
-
-
-
-\* Input format: YYYY.MM.DD
-
-\* Replace {{DATE}}
-
-
-
-\---
-
-
-
-\### VOLUME
-
-
-
-\* Input: number (0\~999)
-
-\* Convert to 3-digit string (e.g., 18 → 018)
-
-\* Replace {{VOLUME}}
-
-
-
-\---
-
-
-
-\### NEWS
-
-
-
-\* Fields:
-
-
-
-&#x20; \* title
-
-&#x20; \* link
-
-&#x20; \* thumbnail URL
-
-&#x20; \* file upload
-
-
-
-\#### MD Output:
-
-
-
-\* Use thumbnail URL
-
-
-
-\#### EMAIL Output:
-
-
-
-\* Convert uploaded image → base64
-
-\* Replace {{NEWS1\_THUMBNAIL\_IMAGE}}
-
-
-
-\---
-
-
-
-\### Editor’s Pick
-
-
-
-\* Fields:
-
-
-
-&#x20; \* title
-
-&#x20; \* description (<br> allowed)
-
-&#x20; \* link
-
-
-
-\---
-
-
-
-\### AI4SE
-
-
-
-\* Fields:
-
-
-
-&#x20; \* link
-
-&#x20; \* description
-
-&#x20; \* thumbnail URL
-
-&#x20; \* file upload
-
-
-
-\#### EMAIL Output:
-
-
-
-\* Convert image to base64
-
-
-
-\---
-
-
-
-\### DevRel Sections
-
-
-
-\* Simple list (title + link)
-
-
-
-\---
-
-
-
-\## 🔄 Template Processing Rules
-
-
-
-\* Load template file as string
-
-\* Replace placeholders using string.replace or similar
-
-\* Support dynamic counts (NEWS1, NEWS2, etc.)
-
-\* If unused slots exist → remove or leave empty safely
-
-
-
-\---
-
-
-
-\## 👀 Preview Behavior
-
-
-
-\* Render EMAIL template as HTML
-
-\* Allow user to edit before saving
-
-
-
-\---
-
-
-
-\## 🧪 Edge Cases
-
-
-
-\* Missing optional sections
-
-\* Only 1 item in multi-sections
-
-\* Image upload missing (fallback to URL)
-
-
-
-\---
-
-
-
-\## 🧼 Code Style
-
-
-
-\* Keep components modular
-
-\* Separate:
-
-
-
-&#x20; \* form state
-
-&#x20; \* template processing
-
-&#x20; \* file generation
-
-
-
-\---
-
-
-
-\## 🚀 Output Expectations
-
-
-
-\* Clean UI
-
-\* Stable placeholder replacement
-
-\* No mutation of original templates
-
-
-
+1. **Never modify template files** (`template_markdown.md`, `template_email.md`).
+2. **Email template = pure placeholder replacement only.** No section rebuilding, no HTML manipulation.
+3. Email template placeholders contain literal backslash characters (byte 0x5c) due to Markdown escaping. The regex in `placeholders.js` must match `[\w\\]+` inside `{{…}}` and normalize by stripping backslashes.
+4. Images: URL mode for markdown output, base64 mode for email output.

@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Bash(xxd:*)",
+      "Bash(echo exit: $?:*)",
+      "Bash(tr >:*)",
+      "Bash(npm run:*)",
+      "Bash(python:*)",
+      "Bash(mv:*)"
     ]
   }
 }

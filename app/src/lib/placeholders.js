@@ -57,9 +57,9 @@ export function buildPlaceholderMap(state, imageMode = 'url') {
  * like {{KEY\_ESCAPED}} found in email templates.
  */
 export function replacePlaceholders(template, map) {
-  return template.replace(/\{\{(\w+(?:\\?_\w+)*)\}\}/g, (match, key) => {
-    // Normalize escaped underscores (email template uses \_)
-    const normalizedKey = key.replace(/\\_/g, '_');
+  return template.replace(/\{\{([\w\\]+)\}\}/g, (match, key) => {
+    // Strip literal backslashes (email template has \_)
+    const normalizedKey = key.replace(/\\/g, '');
     return normalizedKey in map ? map[normalizedKey] : match;
   });
 }

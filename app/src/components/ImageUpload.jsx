@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 
-export default function ImageUpload({ url, base64, section, index, dispatch }) {
+export default function ImageUpload({ url, base64, section, index, dispatch, spec }) {
   const fileRef = useRef(null);
 
   const handleFile = (e) => {
@@ -35,6 +35,7 @@ export default function ImageUpload({ url, base64, section, index, dispatch }) {
       <div className="form-row">
         <label>또는 이미지 업로드 (EMAIL용 base64 변환)</label>
         <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="file-input" />
+        {spec && <p className="image-spec-hint">{spec}</p>}
       </div>
       {preview && (
         <div className="image-preview">

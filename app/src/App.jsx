@@ -1,4 +1,4 @@
-import { useReducer, useRef, useState, useCallback } from 'react';
+import { useReducer, useRef, useState, useCallback, useEffect } from 'react';
 import { initialState, formReducer } from './store';
 import { processMarkdown, processEmail } from './lib/templateEngine';
 import MetaSection from './components/MetaSection';
@@ -24,7 +24,14 @@ function downloadFile(content, filename, mimeType = 'text/html;charset=utf-8') {
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialState);
   const [previewHtml, setPreviewHtml] = useState(null);
+  const [dark, setDark] = useState(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
   const iframeRef = useRef(null);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }, [dark]);
 
   const handlePreview = () => {
     const html = processEmail(state);
@@ -61,6 +68,8 @@ function App() {
     if (!doc) return;
     doc.body.setAttribute('contenteditable', 'true');
     doc.body.style.cursor = 'text';
+    doc.body.style.backgroundColor = '#fff';
+    doc.body.style.colorScheme = 'light';
   };
 
   const handleSaveMd = () => {
@@ -80,6 +89,13 @@ function App() {
       <header className="app-header">
         <h1>DevRel Letter Generator</h1>
         <p>데브렐 레터 생성기</p>
+        <button
+          className="btn-theme-toggle"
+          onClick={() => setDark((d) => !d)}
+          aria-label="Toggle dark mode"
+        >
+          {dark ? 'Light Mode' : 'Dark Mode'}
+        </button>
       </header>
 
       <main className="form-container">

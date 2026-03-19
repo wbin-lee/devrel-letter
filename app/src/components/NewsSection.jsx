@@ -39,6 +39,7 @@ export default function NewsSection({ items, dispatch }) {
             section="news"
             index={i}
             dispatch={dispatch}
+            spec="권장: 373x200px (약 2:1 비율), 최대 500KB. 비율이 다르면 높이 200px 기준으로 잘려 보일 수 있습니다."
           />
         </div>
       ))}

@@ -8,11 +8,11 @@ import {
   buildBoardSection,
 } from './markdownGenerator';
 import {
-  buildNewsSectionEmail,
-  buildEditorPickSectionEmail,
-  buildAi4seSectionEmail,
-  buildBoardDsSectionEmail,
-  buildBoardKoreaSectionEmail,
+  buildEmailNewsItems,
+  buildEmailPickItems,
+  buildEmailAi4seItems,
+  buildEmailDsItems,
+  buildEmailKoreaItems,
 } from './emailGenerator';
 
 /**
@@ -31,6 +31,14 @@ function replaceSection(html, startMarker, endMarker, replacement) {
 
 export function processMarkdown(state) {
   let html = markdownRaw;
+
+  if (import.meta.env.DEV) {
+    console.log('[processMarkdown] raw type:', typeof markdownRaw);
+    console.log('[processMarkdown] raw length:', markdownRaw?.length);
+    console.log('[processMarkdown] has <!-- news -->:', html.includes('<!-- news -->'));
+    console.log('[processMarkdown] state.date:', state.date, 'state.volume:', state.volume);
+    console.log('[processMarkdown] state.news:', JSON.stringify(state.news));
+  }
 
   // Replace dynamic sections (order doesn't matter — markers are unique)
   html = replaceSection(html, '<!-- news -->', '<!-- //end news -->', buildNewsSection(state));
@@ -59,54 +67,30 @@ export function processMarkdown(state) {
 // ---------------------------------------------------------------------------
 
 /**
- * For the email template we locate repeating content by distinctive
- * surrounding HTML patterns and replace the inner content.
+ * Email template processing:
+ * 1. Rebuild dynamic sections (variable item counts) between comment markers
+ * 2. Replace remaining {{PLACEHOLDER}} tokens (DATE, VOLUME)
  */
 export function processEmail(state) {
   let html = emailRaw;
 
-  // --- NEWS section ---
-  // The news items sit inside a <tr> with two <td> columns (side-by-side news).
-  // Marker: the row that contains both news thumbnail columns.
-  // We find the <tr> that wraps both news <td>s by looking for the unique
-  // table structure right after the NEWS title.
-  const newsRowRe = /(<colgroup><col style="width: 0px"><col style="width: 0px"><\/colgroup><tbody><tr>)([\s\S]*?)(<\/tr><\/tbody><\/table><\/td><\/tr><\/tbody><\/table><\/td><\/tr><\/tbody><\/table><\/td><\/tr><tr><td class="cui-real-td" style="background-color:rgb\(217, 217, 217\))/;
-  html = html.replace(newsRowRe, (_, before, _content, after) => {
-    return before + buildNewsSectionEmail(state) + after;
-  });
+  // Rebuild dynamic sections with correct number of items
+  html = replaceSection(html, '<!-- email-news-items -->', '<!-- //email-news-items -->', buildEmailNewsItems(state));
+  html = replaceSection(html, '<!-- email-pick-items -->', '<!-- //email-pick-items -->', buildEmailPickItems(state));
+  html = replaceSection(html, '<!-- email-ai4se-items -->', '<!-- //email-ai4se-items -->', buildEmailAi4seItems(state));
+  html = replaceSection(html, '<!-- email-ds-items -->', '<!-- //email-ds-items -->', buildEmailDsItems(state));
+  html = replaceSection(html, '<!-- email-korea-items -->', '<!-- //email-korea-items -->', buildEmailKoreaItems(state));
 
-  // --- Editor's Pick section ---
-  // Pick items are consecutive <tr>s with border-top:1px solid rgb(102,102,102)
-  // between the section title row and the AI4SE section.
-  const pickRe = /(<\/td><\/tr><\/tbody><\/table><\/td><\/tr>)(<tr><td class="cui-real-td" style="border-top:1px solid[\s\S]*?)(<\/td><\/tr><\/tbody><\/table><\/td><\/tr><\/tbody><\/table><\/td><\/tr><tr><td class="cui-real-td" style="border:0px none rgb\(0, 0, 0\);padding-left:0px;padding-bottom:0px;padding-right:0px;padding-top:0px;"><table style="width: 100%; border-collapse: collapse" class="cui-real-table" role="presentation"><colgroup><col><\/colgroup><tbody><tr><td class="cui-real-td" style="border:0px none rgb\(0, 0, 0\);padding-left:20px;padding-bottom:64px)/;
-  html = html.replace(pickRe, (_, before, _content, after) => {
-    return before + buildEditorPickSectionEmail(state) + after;
-  });
-
-  // --- AI4SE section ---
-  // Two side-by-side <td> columns inside a row, similar pattern to news.
-  const ai4seRowRe = /(<colgroup><col style="width: 0px"><col style="width: 0px"><\/colgroup><tbody><tr>)([\s\S]*?)(<\/tr><\/tbody><\/table><\/td><\/tr><\/tbody><\/table><\/td><\/tr><\/tbody><\/table><\/td><\/tr><tr><td class="cui-real-td" style="background-color:rgb\(240, 240, 240\))/;
-  html = html.replace(ai4seRowRe, (_, before, _content, after) => {
-    return before + buildAi4seSectionEmail(state) + after;
-  });
-
-  // --- DevRel in DS board ---
-  // Items appear as <tr>s inside a table right after the DS title, before
-  // the 92px spacer row.
-  const dsRe = /(DevRel in DS<\/span><\/p>\s*<\/td><\/tr><\/tbody><\/table><\/td><\/tr><tr><td style="border:0px none rgb\(0, 0, 0\);padding-left:0px;padding-bottom:0px;padding-right:0px;padding-top:0px;" class="cui-real-td"><table style="width: 100%; border-collapse: collapse" class="cui-real-table" role="presentation"><colgroup><col><\/colgroup><tbody>)([\s\S]*?)(<\/tbody><\/table><\/td><\/tr><tr><td class="cui-real-td" style="height:92px)/;
-  html = html.replace(dsRe, (_, before, _content, after) => {
-    return before + buildBoardDsSectionEmail(state) + after;
-  });
-
-  // --- DevRel in Korea board ---
-  const koreaRe = /(DevRel in Korea<\/span><\/p>\s*<\/td><\/tr><\/tbody><\/table><\/td><\/tr><tr><td style="border:0px none rgb\(0, 0, 0\);padding-left:0px;padding-bottom:0px;padding-right:0px;padding-top:0px;" class="cui-real-td"><table style="width: 100%; border-collapse: collapse" class="cui-real-table" role="presentation"><colgroup><col><\/colgroup><tbody>)([\s\S]*?)(<\/tbody><\/table><\/td><\/tr><\/tbody><\/table><\/td><\/tr><\/tbody><\/table><\/td><\/tr><tr><td class="cui-real-td" style="background-color:rgb\(0, 0, 0\))/;
-  html = html.replace(koreaRe, (_, before, _content, after) => {
-    return before + buildBoardKoreaSectionEmail(state) + after;
-  });
-
-  // Replace simple placeholders — email uses base64 when available
+  // Replace remaining placeholders (DATE, VOLUME)
   const map = buildPlaceholderMap(state, 'base64');
   html = replacePlaceholders(html, map);
+
+  if (import.meta.env.DEV) {
+    const remaining = html.match(/\{\{[^}]+\}\}/g);
+    if (remaining) {
+      console.warn('[processEmail] unreplaced placeholders:', remaining);
+    }
+  }
 
   return html;
 }
