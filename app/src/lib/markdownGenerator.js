@@ -9,7 +9,7 @@ function newsItem(item, index, volume) {
   return `<li class="news\\_\\_item">
   <div class="hashtag">
     <a href="${item.link}" target="\\_blank"
-      ># ${item.title}
+      >${item.title}
       <img class="clickable-cursor" src="${WEB_BUTTON_SRC}" />
     </a>
   </div>
