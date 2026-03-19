@@ -2,8 +2,9 @@
 FROM node:22-alpine AS build
 WORKDIR /workspace
 
-# Copy templates (needed at build time for ?raw imports)
+# Copy templates and component images (needed at build time)
 COPY template_email.md template_markdown.md ./
+COPY component/ ./component/
 
 # Install dependencies
 COPY app/package.json app/package-lock.json* ./app/
