@@ -37,13 +37,22 @@ export default function NewsSection({ items, dispatch }) {
             />
           </div>
           <div className="form-row">
-            <label>썸네일 (component/NEWS{i + 1}.*)</label>
-            {(item.thumbnailBase64 || item.thumbnailUrl) ? (
+            <label>썸네일 URL (MD용, e.g. https://dsdn~)</label>
+            <input
+              type="text"
+              value={item.thumbnailUrl}
+              onChange={(e) => dispatch({ type: 'SET_ITEM_FIELD', section: 'news', index: i, field: 'thumbnailUrl', value: e.target.value })}
+              placeholder="https://dsdn..."
+            />
+          </div>
+          <div className="form-row">
+            <label>썸네일 이미지 (Email용 — component/NEWS{i + 1}.*)</label>
+            {item.thumbnailBase64 ? (
               <div className="image-preview">
-                <img src={item.thumbnailBase64 || item.thumbnailUrl} alt={`NEWS${i + 1} 썸네일`} />
+                <img src={item.thumbnailBase64} alt={`NEWS${i + 1} 썸네일`} />
               </div>
             ) : (
-              <p className="image-spec-hint">component/ 폴더에 NEWS{i + 1} 이미지 파일을 넣어주세요.</p>
+              <p className="image-spec-hint">component/ 폴더에서 자동 로드됩니다.</p>
             )}
           </div>
         </div>
