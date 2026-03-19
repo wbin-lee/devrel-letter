@@ -1,9 +1,11 @@
+import { thumbnailUrls } from './lib/thumbnails';
+
 export const initialState = {
   date: '2026.03.19',
   volume: '22',
   news: [
-    { title: '#Agent Skills 어렵지 않아요', link: 'https://example.com/news1', thumbnailUrl: 'https://via.placeholder.com/373x200', thumbnailBase64: '' },
-    { title: '#AI Agent 10배 더 잘쓰는법', link: 'https://example.com/news2', thumbnailUrl: 'https://via.placeholder.com/373x200', thumbnailBase64: '' },
+    { title: '#Agent Skills 어렵지 않아요', link: 'https://example.com/news1', thumbnailUrl: thumbnailUrls.NEWS1 || '', thumbnailBase64: '' },
+    { title: '#AI Agent 10배 더 잘쓰는법', link: 'https://example.com/news2', thumbnailUrl: thumbnailUrls.NEWS2 || '', thumbnailBase64: '' },
   ],
   editorPicks: [
     { title: '클로드 프롬프트가 안되네요', summary: '사내 개발의 모든 문제해결은 DSDN을 찾아주세요.', link: 'https://example.com/pick1' },
@@ -12,8 +14,8 @@ export const initialState = {
     { title: '지난 1년간 AI Platform에서 나를 괴롭히던 것', summary: 'VScode에서 active 되는 환경들을 제어하는 방법을 소개합니다.', link: 'https://example.com/pick4' },
   ],
   ai4se: [
-    { summary: '스마트폰에서 Claude Code 세션을 원격 제어 해봅시다.', link: 'https://example.com/ai4se1', thumbnailUrl: 'https://via.placeholder.com/373x200', thumbnailBase64: '' },
-    { summary: 'Ralph 기법으로 AI 코딩도구를 부려 먹는 방법을 알아봅시다.', link: 'https://example.com/ai4se2', thumbnailUrl: 'https://via.placeholder.com/373x200', thumbnailBase64: '' },
+    { summary: '스마트폰에서 Claude Code 세션을 원격 제어 해봅시다.', link: 'https://example.com/ai4se1', thumbnailUrl: thumbnailUrls.AI4SE1 || '', thumbnailBase64: '' },
+    { summary: 'Ralph 기법으로 AI 코딩도구를 부려 먹는 방법을 알아봅시다.', link: 'https://example.com/ai4se2', thumbnailUrl: thumbnailUrls.AI4SE2 || '', thumbnailBase64: '' },
   ],
   devrelDs: [
     { title: '강해져서 돌아왔다. Code Mate v3.1.0 릴리즈!', link: 'https://example.com/ds1' },
@@ -44,6 +46,19 @@ export function formReducer(state, action) {
     case 'REMOVE_ITEM': {
       const list = state[action.section].filter((_, i) => i !== action.index);
       return { ...state, [action.section]: list };
+    }
+
+    case 'LOAD_THUMBNAILS': {
+      // action.base64Map = { NEWS1: 'data:...', NEWS2: 'data:...', AI4SE1: 'data:...', AI4SE2: 'data:...' }
+      const newNews = state.news.map((item, i) => ({
+        ...item,
+        thumbnailBase64: action.base64Map[`NEWS${i + 1}`] || item.thumbnailBase64,
+      }));
+      const newAi4se = state.ai4se.map((item, i) => ({
+        ...item,
+        thumbnailBase64: action.base64Map[`AI4SE${i + 1}`] || item.thumbnailBase64,
+      }));
+      return { ...state, news: newNews, ai4se: newAi4se };
     }
 
     case 'RESET':

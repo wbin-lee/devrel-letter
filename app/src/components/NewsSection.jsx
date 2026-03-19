@@ -1,5 +1,5 @@
 import SectionHeader from './SectionHeader';
-import ImageUpload from './ImageUpload';
+import { thumbnailUrls } from '../lib/thumbnails';
 
 const TEMPLATE = { title: '', link: '', thumbnailUrl: '', thumbnailBase64: '' };
 
@@ -11,7 +11,10 @@ export default function NewsSection({ items, dispatch }) {
         count={items.length}
         min={1}
         max={2}
-        onAdd={() => dispatch({ type: 'ADD_ITEM', section: 'news', template: { ...TEMPLATE } })}
+        onAdd={() => {
+          const n = items.length + 1;
+          dispatch({ type: 'ADD_ITEM', section: 'news', template: { ...TEMPLATE, thumbnailUrl: thumbnailUrls[`NEWS${n}`] || '' } });
+        }}
         onRemove={() => dispatch({ type: 'REMOVE_ITEM', section: 'news', index: items.length - 1 })}
       />
       {items.map((item, i) => (
@@ -33,14 +36,16 @@ export default function NewsSection({ items, dispatch }) {
               onChange={(e) => dispatch({ type: 'SET_ITEM_FIELD', section: 'news', index: i, field: 'link', value: e.target.value })}
             />
           </div>
-          <ImageUpload
-            url={item.thumbnailUrl}
-            base64={item.thumbnailBase64}
-            section="news"
-            index={i}
-            dispatch={dispatch}
-            spec="권장: 373x200px (약 2:1 비율), 최대 500KB. 비율이 다르면 높이 200px 기준으로 잘려 보일 수 있습니다."
-          />
+          <div className="form-row">
+            <label>썸네일 (component/NEWS{i + 1}.*)</label>
+            {(item.thumbnailBase64 || item.thumbnailUrl) ? (
+              <div className="image-preview">
+                <img src={item.thumbnailBase64 || item.thumbnailUrl} alt={`NEWS${i + 1} 썸네일`} />
+              </div>
+            ) : (
+              <p className="image-spec-hint">component/ 폴더에 NEWS{i + 1} 이미지 파일을 넣어주세요.</p>
+            )}
+          </div>
         </div>
       ))}
     </fieldset>

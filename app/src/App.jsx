@@ -1,6 +1,7 @@
 import { useReducer, useRef, useState, useCallback, useEffect } from 'react';
 import { initialState, formReducer } from './store';
 import { processMarkdown, processEmail } from './lib/templateEngine';
+import { loadThumbnailBase64 } from './lib/thumbnails';
 import MetaSection from './components/MetaSection';
 import NewsSection from './components/NewsSection';
 import EditorPickSection from './components/EditorPickSection';
@@ -32,6 +33,12 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   }, [dark]);
+
+  useEffect(() => {
+    loadThumbnailBase64().then((base64Map) => {
+      dispatch({ type: 'LOAD_THUMBNAILS', base64Map });
+    });
+  }, []);
 
   const handlePreview = () => {
     const html = processEmail(state);
