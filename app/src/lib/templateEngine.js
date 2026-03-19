@@ -59,6 +59,9 @@ export function processMarkdown(state) {
   const map = buildPlaceholderMap(state, 'url');
   html = replacePlaceholders(html, map);
 
+  // Strip markdown escape backslashes (\_  → _) so CSS selectors match HTML class names
+  html = html.replace(/\\_/g, '_');
+
   return html;
 }
 
