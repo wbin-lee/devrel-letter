@@ -1,0 +1,9 @@
+app/node_modules
+app/dist
+.git
+.claude
+test_output.html
+app/debug_output.html
+app/debug_email.cjs
+app/test_e2e.mjs
+app/test_regex.mjs
