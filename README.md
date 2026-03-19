@@ -64,6 +64,31 @@ devrel-letter/
 2. **플레이스홀더 치환** — `{{DATE}}`, `{{VOLUME}}`, `{{NEWS1_THUMBNAIL_IMAGE}}` 등의 토큰을 폼 값으로 대체
 3. **이미지 분기** — Markdown 출력은 항상 URL, Email 출력은 base64 우선 (없으면 URL fallback)
 
+## Docker로 실행하기
+
+사내 네트워크에서 다른 PC로 접속할 수 있도록 Docker로 배포할 수 있습니다.
+
+```bash
+# 1. 프로젝트 클론
+git clone <repository-url>
+cd devrel-letter
+
+# 2. Docker 이미지 빌드
+docker build -t devrel-letter .
+
+# 3. 컨테이너 실행 (포트는 원하는 값으로 변경)
+docker run -d -p 3000:80 --name devrel-letter devrel-letter
+```
+
+브라우저에서 `http://<워크스테이션-IP>:<포트>` 로 접속합니다.
+예: `http://10.0.1.50:3000`
+
+```bash
+# 컨테이너 중지 / 삭제
+docker stop devrel-letter
+docker rm devrel-letter
+```
+
 ## 기술 스택
 
 - **React 19** + **Vite 8**
@@ -71,3 +96,4 @@ devrel-letter/
 - 파일 다운로드: Blob API
 - 이미지 변환: FileReader API (`readAsDataURL`)
 - 인라인 편집: iframe `contentEditable`
+- 배포: Docker (nginx)
